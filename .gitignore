@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+ml/datasets/raw/
+ml/datasets/processed/
+ml/datasets/images/
+.env
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.log
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ML artifacts that are large / regenerated
+ml/datasets/raw/
+ml/datasets/processed/
+ml/datasets/images/
+*.h5
+*.keras
+*.ckpt
+catboost_info/
+
+# Keep tracked model metadata; large joblib may be gitignored if huge
+# Trained compact artifacts ARE committed when small enough.
+ml/models/*.ubj
+ml/models/resnet_cache/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Cloudinary / local uploads
+backend/uploads/
+frontend/.env
+backend/.env

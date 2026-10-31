@@ -1,0 +1,12 @@
+"""MongoDB collection name constants."""
+
+USERS = "users"
+PRODUCTS = "products"
+SALES = "sales"
+FORECASTS = "forecasts"
+MODEL_METRICS = "model_metrics"
+TRENDS = "trends_data"
+WEATHER = "weather_data"
+FESTIVALS = "festivals"
+INVENTORY = "inventory"
+TOKEN_BLOCKLIST = "token_blocklist"

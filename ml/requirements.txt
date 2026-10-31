@@ -1,0 +1,13 @@
+numpy==2.0.2
+pandas==2.2.3
+scikit-learn==1.6.1
+scipy==1.13.1
+xgboost==2.1.4
+joblib==1.4.2
+pillow==11.2.1
+openpyxl==3.1.5
+holidays==0.71
+pyarrow==19.0.1
+tensorflow==2.18.0
+pytrends==4.9.2
+tqdm==4.67.1

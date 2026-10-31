@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --color-ink: #1c1917;
+  --color-paper: #f7f3ee;
+  --color-rose: #9a4a4a;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f7f3ee;
+  color: #1c1917;
+  font-family: var(--font-sans);
+}
+
+.card {
+  background: white;
+  border: 1px solid #e7e0d6;
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgb(28 25 23 / 0.04);
+}

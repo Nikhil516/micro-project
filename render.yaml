@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: fashion-forecast-api
+    env: python
+    plan: starter
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && pip install tensorflow-cpu==2.18.0
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: DATABASE_NAME
+        value: fashion_forecasting
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: MODEL_DIR
+        value: /opt/render/project/src/ml/models
