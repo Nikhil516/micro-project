@@ -8,6 +8,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import certifi
 import pandas as pd
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -25,7 +26,7 @@ async def seed():
     name = os.getenv("DATABASE_NAME", "fashion_forecasting")
     if "YOUR_MONGODB" in uri:
         raise SystemExit("Set MONGODB_URI first")
-    client = AsyncIOMotorClient(uri)
+    client = AsyncIOMotorClient(uri, tlsCAFile=certifi.where())
     db = client[name]
 
     products = pd.read_csv(PROCESSED / "products.csv")
@@ -130,6 +131,39 @@ async def seed():
         metrics = json.loads(metrics_path.read_text())
         await db.model_metrics.delete_many({"model_version": metrics.get("model_version")})
         await db.model_metrics.insert_one({**metrics, "ingested_at": datetime.now(timezone.utc)})
+
+    if panel_path.exists():
+        panel = pd.read_parquet(panel_path)
+        recent = panel.groupby("product_id")["units"].mean()
+        await db.inventory.delete_many({"seed": True})
+        inv_docs = []
+        for pid, avg in recent.items():
+            inv_docs.append(
+                {
+                    "product_id": pid,
+                    "on_hand": float(max(0, round(avg * 2))),
+                    "reorder_point": float(max(5, round(avg))),
+                    "seed": True,
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            )
+        if inv_docs:
+            await db.inventory.insert_many(inv_docs)
+
+    sys.path.insert(0, str(ROOT / "backend"))
+    from app.utils.security import hash_password
+
+    demo_email = "demo@atelier.local"
+    if not await db.users.find_one({"email": demo_email}):
+        await db.users.insert_one(
+            {
+                "name": "Demo Analyst",
+                "email": demo_email,
+                "password_hash": hash_password("college123"),
+                "role": "admin",
+                "created_at": datetime.now(timezone.utc),
+            }
+        )
 
     print("Seed complete")
     client.close()

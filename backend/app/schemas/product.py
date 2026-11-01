@@ -29,5 +29,6 @@ class ProductUpdate(BaseModel):
 class ProductOut(ProductBase):
     product_id: str
     image_url: Optional[str] = None
+    image_embedding_ready: bool = False
     has_history: bool = False
     created_at: Optional[datetime] = None

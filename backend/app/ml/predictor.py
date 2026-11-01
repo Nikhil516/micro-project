@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import tempfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -30,7 +31,8 @@ SEASON_MAP = {
 
 class ForecastService:
     def __init__(self) -> None:
-        self.model_dir = Path(settings.model_dir)
+        configured_dir = Path(settings.model_dir)
+        self.model_dir = configured_dir if configured_dir.is_absolute() else ROOT / configured_dir
         self.artifact = None
         self.encoder = None
         self.scaler = None
@@ -102,6 +104,34 @@ class ForecastService:
             return self.pca.transform(self.embeddings[idx].reshape(1, -1))[0]
         except ValueError:
             return np.zeros(dim)
+
+    def register_image_embedding(self, product_id: str, image_data: bytes) -> None:
+        if not self.available or self.pca is None:
+            raise RuntimeError("trained model artifacts are unavailable")
+        if not image_data:
+            raise ValueError("image is empty")
+
+        from ml.feature_extraction.resnet import embed_single
+
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as temp:
+            temp.write(image_data)
+            temp.flush()
+            embedding = embed_single(temp.name).astype(np.float32)
+
+        if embedding.shape != (2048,):
+            raise ValueError(f"unexpected ResNet-50 embedding shape: {embedding.shape}")
+        if self.embeddings is None:
+            embeddings = embedding.reshape(1, -1)
+            ids = [product_id]
+        else:
+            keep = [index for index, value in enumerate(self.embed_ids) if value != product_id]
+            embeddings = np.vstack([self.embeddings[keep], embedding])
+            ids = [self.embed_ids[index] for index in keep] + [product_id]
+
+        np.save(self.model_dir / "resnet50_embeddings.npy", embeddings)
+        (self.model_dir / "resnet50_product_ids.json").write_text(json.dumps(ids))
+        self.embeddings = embeddings
+        self.embed_ids = ids
 
     def _similar_ids(self, product_id: str, k: int = 8) -> list[str]:
         if self.embeddings is None or product_id not in self.embed_ids:

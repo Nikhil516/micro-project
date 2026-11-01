@@ -6,12 +6,12 @@ This is **not** a production SaaS. Scope is a working demo: React dashboard, Fas
 
 ---
 
-## Two-phase plan
+## Implementation status
 
 | Phase | Status | What it covers |
 | --- | --- | --- |
-| **Phase 1** | Done (this repo setup) | Architecture, folders, env templates, docs, JavaScript frontend stack |
-| **Phase 2** | Next | Datasets, training, FastAPI + MongoDB behaviour, dashboards, tests |
+| **Phase 1** | Complete | Architecture, folders, env templates, docs, JavaScript frontend stack |
+| **Phase 2** | Complete | Dataset acquisition, preprocessing, ResNet-50 embeddings, XGBoost training, FastAPI integration, dashboards, and tests |
 
 Do not treat later folders as “already trained / already deployed.” Phase 2 trains the model and wires live predictions.
 
@@ -123,11 +123,26 @@ API docs (when the server is up): `http://localhost:8000/docs`
 
 ---
 
-## Model training (Phase 2)
+## Model training
 
-Training must actually run before metrics or forecasts are shown as real. If this machine cannot finish GPU/CPU training, use the Colab notebook under `ml/notebooks/` (added in Phase 2). Artifact path:
+The checked-in artifacts were generated from the public datasets described in [ml/datasets/README.md](ml/datasets/README.md). To retrain from scratch:
 
-`ml/models/xgboost_weekly_demand.joblib`
+```bash
+SSL_CERT_FILE=.venv/lib/python3.10/site-packages/certifi/cacert.pem \
+DYLD_LIBRARY_PATH=/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/sklearn/.dylibs \
+./.venv/bin/python -m ml.training.pipeline --image-limit 60
+```
+
+On macOS, install an OpenMP runtime such as `libomp` for XGBoost. The Colab notebook under `ml/notebooks/` provides a GPU-compatible alternative.
+
+The verified chronological hold-out results for the current artifact are:
+
+| Model | MAE | RMSE | WAPE |
+| --- | ---: | ---: | ---: |
+| XGBoost | 44.17 | 85.62 | 0.6407 |
+| Lag-1 baseline | 44.47 | 86.04 | 0.6451 |
+
+Artifacts are stored under `ml/models/`, including `xgboost_weekly_demand.joblib`, preprocessing objects, ResNet-50 metadata/embeddings, and evaluation reports. The API loads these files; it does not retrain during requests.
 
 ---
 

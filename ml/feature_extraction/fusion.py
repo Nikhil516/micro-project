@@ -71,7 +71,14 @@ def fuse(pca_dim: int = PCA_DIM) -> pd.DataFrame:
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     joblib.dump(pca, MODELS_DIR / "image_pca.joblib")
 
-    panel = panel.merge(products[["product_id", "colour", "pattern", "sleeve_type"]], on="product_id", how="left")
+    attribute_cols = ["colour", "pattern", "sleeve_type"]
+    missing_attributes = [col for col in attribute_cols if col not in panel.columns]
+    if missing_attributes:
+        panel = panel.merge(
+            products[["product_id", *missing_attributes]],
+            on="product_id",
+            how="left",
+        )
     panel = panel.merge(pca_df, on="product_id", how="inner")
 
     panel = _add_lags(panel)

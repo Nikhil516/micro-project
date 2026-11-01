@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import io
 import json
+import ssl
 import zipfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.request import Request, urlopen
 
 import pandas as pd
+import certifi
 
 from ml.preprocessing.paths import IMAGE_DIR, PROCESSED_DIR, RAW_DIR, ROOT, ensure_dirs
 
@@ -49,7 +51,8 @@ def _download(url: str, dest: Path, timeout: int = 120) -> Path:
     if dest.exists() and dest.stat().st_size > 0:
         return dest
     req = Request(url, headers={"User-Agent": "fashion-demand-forecasting/1.0"})
-    with urlopen(req, timeout=timeout) as resp:
+    context = ssl.create_default_context(cafile=certifi.where())
+    with urlopen(req, timeout=timeout, context=context) as resp:
         dest.write_bytes(resp.read())
     return dest
 
@@ -171,7 +174,9 @@ def build_festival_table(start: date, end: date) -> pd.DataFrame:
 
 
 def infer_category(description: str) -> str | None:
-    text = (description or "").lower()
+    if description is None or pd.isna(description):
+        return None
+    text = str(description).lower()
     for category, keys in FASHION_KEYWORDS.items():
         if any(key in text for key in keys):
             return category

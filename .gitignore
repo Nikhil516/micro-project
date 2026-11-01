@@ -46,3 +46,6 @@ ml/models/resnet_cache/
 backend/uploads/
 frontend/.env
 backend/.env
+
+# Local MongoDB data
+.data/

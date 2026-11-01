@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -6,6 +7,7 @@ from pymongo import ReturnDocument
 
 from app.database import get_db
 from app.middleware.auth import get_current_user, require_roles
+from app.ml.predictor import forecast_service
 from app.schemas.product import ProductCreate, ProductOut, ProductUpdate
 from app.services.storage import save_image
 
@@ -22,6 +24,7 @@ def _out(doc) -> ProductOut:
         sleeve_type=doc.get("sleeve_type", "unknown"),
         description=doc.get("description", ""),
         image_url=doc.get("image_url"),
+        image_embedding_ready=bool(doc.get("image_embedding_ready")),
         has_history=bool(doc.get("has_history")),
         created_at=doc.get("created_at"),
     )
@@ -52,6 +55,7 @@ async def create_product(body: ProductCreate, user=Depends(require_roles("admin"
         **body.model_dump(),
         "product_id": product_id,
         "has_history": False,
+        "image_embedding_ready": False,
         "created_at": datetime.now(timezone.utc),
         "created_by": user["email"],
     }
@@ -96,10 +100,18 @@ async def upload_image(
     doc = await db.products.find_one({"product_id": product_id})
     if not doc:
         raise HTTPException(404, "Product not found")
+    image_data = await file.read()
+    if not image_data:
+        raise HTTPException(400, "Uploaded image is empty")
+    try:
+        await asyncio.to_thread(forecast_service.register_image_embedding, product_id, image_data)
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(422, f"Could not process image with ResNet-50: {exc}") from exc
+    await file.seek(0)
     url = await save_image(file)
     updated = await db.products.find_one_and_update(
         {"product_id": product_id},
-        {"$set": {"image_url": url}},
+        {"$set": {"image_url": url, "image_embedding_ready": True}},
         return_document=ReturnDocument.AFTER,
     )
     return _out(updated)

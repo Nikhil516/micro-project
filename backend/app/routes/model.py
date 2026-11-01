@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
-from app.config import settings
+from app.config import ROOT, settings
 from app.middleware.auth import get_current_user
 from app.ml.predictor import forecast_service
 from pathlib import Path
@@ -16,7 +16,8 @@ async def info(user=Depends(get_current_user)):
 
 @router.get("/test-predictions")
 async def test_predictions(user=Depends(get_current_user)):
-    path = Path(settings.model_dir) / "test_predictions.csv"
+    model_dir = Path(settings.model_dir)
+    path = (model_dir if model_dir.is_absolute() else ROOT / model_dir) / "test_predictions.csv"
     if not path.exists():
         raise HTTPException(404, "No evaluation prediction file. Train the model first.")
     return FileResponse(path, filename="test_predictions.csv")

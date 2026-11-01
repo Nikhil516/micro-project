@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import client from "../api/client.js";
 import { useToast } from "../context/ToastContext.jsx";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const empty = {
   name: "",
   category: "dress",
@@ -86,6 +88,13 @@ export default function Products() {
                 {items.map((p) => (
                   <tr key={p.product_id} className="border-t border-stone-100">
                     <td className="px-4 py-3">
+                      {p.image_url ? (
+                        <img
+                          src={p.image_url.startsWith("http") ? p.image_url : `${API_URL}${p.image_url}`}
+                          alt={p.name}
+                          className="mb-2 h-16 w-16 rounded-lg object-cover"
+                        />
+                      ) : null}
                       <p className="font-medium">{p.name}</p>
                       <p className="text-xs text-stone-400">{p.product_id}</p>
                       {p.has_history ? null : <p className="text-xs text-rose-800">cold-start</p>}

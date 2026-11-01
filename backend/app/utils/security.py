@@ -27,7 +27,7 @@ def verify_password(password: str, stored: str) -> bool:
 def create_token(sub: str, role: str) -> tuple[str, str, datetime]:
     jti = str(uuid4())
     exp = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expire_minutes)
-    payload = {"sub": sub, "role": role, "jti": jti, "exp": exp}
+    payload = {"sub": sub, "role": role, "jti": jti, "exp": int(exp.timestamp())}
     return jwt.encode(payload, settings.jwt_secret, algorithm="HS256"), jti, exp
 
 

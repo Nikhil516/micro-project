@@ -11,3 +11,4 @@ pyarrow==19.0.1
 tensorflow==2.18.0
 pytrends==4.9.2
 tqdm==4.67.1
+certifi==2026.10.23

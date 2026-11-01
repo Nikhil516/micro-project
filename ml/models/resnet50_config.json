@@ -1,0 +1,15 @@
+{
+  "architecture": "ResNet50",
+  "weights": "imagenet",
+  "include_top": false,
+  "pooling": "avg",
+  "image_size": [
+    224,
+    224
+  ],
+  "embedding_dim": 2048,
+  "n_embedded": 60,
+  "n_failed": 0,
+  "failed_product_ids": [],
+  "fine_tuned": false
+}
